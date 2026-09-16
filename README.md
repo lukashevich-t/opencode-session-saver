@@ -230,8 +230,28 @@
 
 ## Проверка корректности
 
-Плагин можно проверить типов на уровне SDK (поднимает строгий tsc):
+Тесты — юнит (чистые функции, in-memory fs) и интеграционные (фейковый `client`,
+временные каталоги, инъекция часов/homedir; полные сценарии
+`session.created` → `message.updated` → `session.deleted` → `dispose()`).
+Запущенный opencode не нужен:
 
 ```sh
-bunx tsc --noEmit <<< плагин
+node --test session-saver.test.ts
+```
+
+Нужен Node ≥ 23.6 (нативный type-stripping для `.ts`; подойдёт обычный node 24).
+Тесты запускаются напрямую — без package.json и бандлера. Шов для тестов —
+`createSessionSaver({ now, fs, homedir })`; дефолтный экспорт —
+`createSessionSaver()` с реальными зависимостями (его и грузит opencode).
+
+Проверка типов против SDK (`@opencode-ai/plugin`, строгий `tsc`). В репо
+намеренно нет `node_modules`, поэтому tsc запускается из временного каталога:
+
+```sh
+mkdir -p /tmp/ss-tsc && cd /tmp/ss-tsc
+npm init -y >/dev/null && npm i -D typescript @types/node @opencode-ai/plugin
+cp "$OLDPWD"/session-saver.ts "$OLDPWD"/session-saver.test.ts .
+npx tsc --noEmit --strict --types node --allowImportingTsExtensions \
+  --module esnext --moduleResolution bundler --target esnext \
+  session-saver.ts session-saver.test.ts
 ```

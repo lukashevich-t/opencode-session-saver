@@ -1,14 +1,31 @@
 # AGENTS.md
 
-Single-file opencode plugin (`session-saver.ts`): auto-exports opencode sessions as JSON in `opencode export/import` format into `ai-sessions/` in the repo root. There is **no** `package.json`, no build, no test infra — the whole codebase is one `.ts` file plus `README.md`.
+Single-file opencode plugin (`session-saver.ts`): auto-exports opencode sessions as JSON in `opencode export/import` format into `ai-sessions/` in the repo root. There is **no** `package.json` and no build — the source is `session-saver.ts`, the tests are `session-saver.test.ts` (plain `node:test`, no framework), plus `README.md` (human-facing docs, Russian).
 
 ## Verification
 
+Tests — unit (pure helpers, in-memory fs) and integration (fake `client`, tmp dirs, injected clock/homedir, full `session.created`/`message.updated`/`session.deleted`/`dispose()` sequences — no running opencode needed):
+
 ```sh
-bunx tsc --noEmit session-saver.ts
+node --test session-saver.test.ts
 ```
 
-Typecheck against the `@opencode-ai/plugin` SDK. Requires `bun` (opencode ships it; it is not installed on this host). There is no lint/test command — do not add test infrastructure.
+Requires Node ≥ 23.6 (native TS type stripping; node 24 is installed on this host). Keep it that way: no package.json, no bundler, no test framework — do not add them. The injection seam is `createSessionSaver({ now, fs, homedir })`; the default export is `createSessionSaver()` with real fs/clock/homedir — that's what opencode loads.
+
+Typecheck against the `@opencode-ai/plugin` SDK — the repo has no `node_modules` by design, so run tsc from a scratch dir (TS ≥ 7 does not auto-include `@types/node`, hence `--types node`):
+
+```sh
+mkdir -p /tmp/ss-tsc && cd /tmp/ss-tsc
+npm init -y >/dev/null && npm i -D typescript @types/node @opencode-ai/plugin
+cp "$OLDPWD"/session-saver.ts "$OLDPWD"/session-saver.test.ts .
+npx tsc --noEmit --strict --types node --allowImportingTsExtensions --module esnext --moduleResolution bundler --target esnext session-saver.ts session-saver.test.ts
+```
+
+Drift check against the deployed copy:
+
+```sh
+diff session-saver.ts ~/.config/opencode/plugins/session-saver.ts
+```
 
 ## Deployment gotcha
 
@@ -20,7 +37,7 @@ cp session-saver.ts ~/.config/opencode/plugins/session-saver.ts
 
 ## Behavior invariants to preserve
 
-These are the subtle parts the code implements; don't break them while editing. The final truth on behavior is `session-saver.ts` itself — the invariants below summarize it, and where they disagree with the code, the code wins:
+These are the subtle parts the code implements; don't break them while editing. The final truth on behavior is `session-saver.ts` itself — the invariants below summarize it, and where they disagree with the code, the code wins. `session-saver.test.ts` pins these: change the tests in the same edit whenever you change behavior deliberately:
 
 - **Save timing**: sessions are saved only on activity switches and on `dispose()` — never per message/token. Subagent/subtask sessions (`parentID` set) are never saved or treated as switches.
 - **All async work** must go through the `enqueue()` queue (serializes writes). `dispose()` races completion against a 4s timeout, and skips work until `warm` (index rebuild) finishes.
