@@ -414,4 +414,7 @@ export function createSessionSaver(deps: SessionSaverDeps = {}): Plugin {
   }
 }
 
-export default createSessionSaver()
+export default {
+  id: "session-saver",
+  server: createSessionSaver(),
+}
