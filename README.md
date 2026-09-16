@@ -13,6 +13,21 @@
 
 ---
 
+## Установка
+```bash
+mkdir -p ~/.config/opencode/plugins && \
+wget https://codeload.github.com/lukashevich-t/opencode-session-saver/tar.gz/HEAD -O - 2>/dev/null | \
+tar -C ~/.config/opencode/plugins --strip-components=1 -xzf -
+```
+
+Через `curl` (с редиректами codeload):
+
+```bash
+mkdir -p ~/.config/opencode/plugins && \
+curl -sL https://codeload.github.com/lukashevich-t/opencode-session-saver/tar.gz/HEAD | \
+tar -C ~/.config/opencode/plugins --strip-components=1 -xzf -
+```
+
 ## Как это работает
 
 Плагин следит за событиями сервера opencode и делает экспорт активной сессии в
