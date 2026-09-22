@@ -17,7 +17,7 @@
 ```bash
 mkdir -p ~/.config/opencode/plugins && \
 wget https://codeload.github.com/lukashevich-t/opencode-session-saver/tar.gz/HEAD -O - 2>/dev/null | \
-tar -C ~/.config/opencode/plugins --strip-components=1 -xzf -
+tar -C ~/.config/opencode/plugins --strip-components=1 -xzf - opencode-session-saver-HEAD/session-saver.ts
 ```
 
 Через `curl` (с редиректами codeload):
