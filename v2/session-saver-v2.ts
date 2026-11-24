@@ -74,7 +74,7 @@ const realFs: FsLike = {
 }
 
 export const DEFAULT_CONFIG: Config = {
-  root: "ai-sessions",
+  root: ".ai-sessions",
   minMessages: 1,
   maxDescLen: 80,
   transliterate: true,

@@ -383,7 +383,7 @@ test("saves on switch, on turn end and on cleanup, with path scheme and index", 
       ["ses_bbb", { info: info("ses_bbb", { title: "Second" }), messages: [msg("m1")] }],
     ]),
   )
-  const root = path.join(env.worktree, "ai-sessions")
+  const root = path.join(env.worktree, ".ai-sessions")
   try {
     await h.send(created("ses_aaa"))
     assert.deepEqual(await sessionFiles(root), [])
@@ -429,7 +429,7 @@ test("turn end saves the session without any switch or cleanup", async () => {
       ["ses_aaa", { info: info("ses_aaa", { title: "Alpha" }), messages: [msg("m1"), msg("m2")] }],
     ]),
   )
-  const root = path.join(env.worktree, "ai-sessions")
+  const root = path.join(env.worktree, ".ai-sessions")
   try {
     await h.send(created("ses_aaa"))
     assert.deepEqual(await sessionFiles(root), [])
@@ -458,7 +458,7 @@ test("session.renamed re-saves the session under the new title", async () => {
       ["ses_aaa", { info: info("ses_aaa", { title: "New session" }), messages: [msg("m1")] }],
     ]),
   )
-  const root = path.join(env.worktree, "ai-sessions")
+  const root = path.join(env.worktree, ".ai-sessions")
   try {
     await h.send(created("ses_aaa"))
     await h.send(executionSucceeded("ses_aaa"))
@@ -483,7 +483,7 @@ test("location.shutdown saves the active session", async () => {
       ["ses_aaa", { info: info("ses_aaa", { title: "Alpha" }), messages: [msg("m1")] }],
     ]),
   )
-  const root = path.join(env.worktree, "ai-sessions")
+  const root = path.join(env.worktree, ".ai-sessions")
   try {
     await h.send(created("ses_aaa"))
     await h.send(locationShutdown())
@@ -504,7 +504,7 @@ test("compaction keeps the history saved before it", async () => {
       ],
     ]),
   )
-  const root = path.join(env.worktree, "ai-sessions")
+  const root = path.join(env.worktree, ".ai-sessions")
   try {
     await h.send(created("ses_aaa"))
     await h.send(executionSucceeded("ses_aaa"))
@@ -535,7 +535,7 @@ test("session.viewed and tui.session.select switch the active session", async ()
       ["ses_bbb", { info: info("ses_bbb", { title: "Beta" }), messages: [msg("m1")] }],
     ]),
   )
-  const root = path.join(env.worktree, "ai-sessions")
+  const root = path.join(env.worktree, ".ai-sessions")
   try {
     await h.send(viewed("ses_aaa"))
     assert.deepEqual(await sessionFiles(root), [])
@@ -559,7 +559,7 @@ test("dedup skips unchanged sessions; minute rollover moves path and removes old
       ["ses_ccc", { info: info("ses_ccc", { title: "Gamma" }), messages: [msg("m1")] }],
     ]),
   )
-  const root = path.join(env.worktree, "ai-sessions")
+  const root = path.join(env.worktree, ".ai-sessions")
   try {
     await h.send(created("ses_aaa"))
     await h.send(created("ses_bbb"))
@@ -608,7 +608,7 @@ test("subagent sessions are never saved and never become active", async () => {
       ],
     ]),
   )
-  const root = path.join(env.worktree, "ai-sessions")
+  const root = path.join(env.worktree, ".ai-sessions")
   try {
     await h.send(created("ses_aaa"))
     // parentID on the event payload
@@ -643,7 +643,7 @@ test("sessions outside the plugin location are ignored", async () => {
       ],
     ]),
   )
-  const root = path.join(env.worktree, "ai-sessions")
+  const root = path.join(env.worktree, ".ai-sessions")
   try {
     await h.send(created("ses_aaa"))
     await h.send(viewed("ses_other"))
@@ -667,7 +667,7 @@ test("session.deleted removes file and index entry, clears active session", asyn
       ["ses_bbb", { info: info("ses_bbb", { title: "Beta" }), messages: [msg("m1")] }],
     ]),
   )
-  const root = path.join(env.worktree, "ai-sessions")
+  const root = path.join(env.worktree, ".ai-sessions")
   try {
     await h.send(created("ses_aaa"))
     await h.send(created("ses_bbb"))
@@ -699,7 +699,7 @@ test("project config wins: custom root and minMessages are honored", async () =>
     await h.send(created("ses_long"))
     await h.cleanup()
 
-    await assert.rejects(stat(path.join(env.worktree, "ai-sessions")))
+    await assert.rejects(stat(path.join(env.worktree, ".ai-sessions")))
     assert.deepEqual(await sessionFiles(path.join(env.worktree, "custom-sessions")), [
       "2026-09-16/15-08_long_talk.json",
     ])
@@ -724,7 +724,7 @@ test("global config applies when project config is absent", async () => {
   try {
     await h.send(created("ses_aaa"))
     await h.cleanup()
-    assert.deepEqual(await sessionFiles(path.join(env.worktree, "ai-sessions")), ["2026-09-16/15-08_very_.json"])
+    assert.deepEqual(await sessionFiles(path.join(env.worktree, ".ai-sessions")), ["2026-09-16/15-08_very_.json"])
   } finally {
     await cleanup(env)
   }
@@ -732,7 +732,7 @@ test("global config applies when project config is absent", async () => {
 
 test("warm rebuild: index derived from existing files, dedup and delete work on rebuilt entries", async () => {
   const env = await makeEnv()
-  const oldFile = path.join(env.worktree, "ai-sessions", "2026-09-16", "15-08_old.json")
+  const oldFile = path.join(env.worktree, ".ai-sessions", "2026-09-16", "15-08_old.json")
   await mkdir(path.dirname(oldFile), { recursive: true })
   const oldData = { info: info("ses_old", { title: "Old" }), messages: [msg("m1")] }
   await writeFile(oldFile, JSON.stringify(oldData, null, 2))
@@ -744,7 +744,7 @@ test("warm rebuild: index derived from existing files, dedup and delete work on 
       ["ses_new", { info: info("ses_new", { title: "New" }), messages: [msg("m1")] }],
     ]),
   )
-  const root = path.join(env.worktree, "ai-sessions")
+  const root = path.join(env.worktree, ".ai-sessions")
   try {
     await h.send(created("ses_old"))
     const index = await readJsonAbs(path.join(root, ".index.json"))
@@ -774,7 +774,7 @@ test("cleanup aborts the event stream and is safe to call twice", async () => {
       ["ses_aaa", { info: info("ses_aaa", { title: "Alpha" }), messages: [msg("m1")] }],
     ]),
   )
-  const root = path.join(env.worktree, "ai-sessions")
+  const root = path.join(env.worktree, ".ai-sessions")
   try {
     await h.send(created("ses_aaa"))
     await h.cleanup()

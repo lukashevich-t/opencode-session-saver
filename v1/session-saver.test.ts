@@ -255,27 +255,27 @@ test("saves only on switch and dispose, with path scheme and index", async () =>
     const hooks = await startPlugin(env, sessions)
 
     await hooks.event(created("ses_aaa"))
-    assert.deepEqual(await sessionFiles(path.join(env.worktree, "ai-sessions")), [])
-    const emptyIndex = await readJsonAbs(path.join(env.worktree, "ai-sessions", ".index.json"))
+    assert.deepEqual(await sessionFiles(path.join(env.worktree, ".ai-sessions")), [])
+    const emptyIndex = await readJsonAbs(path.join(env.worktree, ".ai-sessions", ".index.json"))
     assert.deepEqual(emptyIndex, { version: 1, sessions: {} })
 
     await hooks.event(updated("ses_aaa"))
-    assert.deepEqual(await sessionFiles(path.join(env.worktree, "ai-sessions")), [])
+    assert.deepEqual(await sessionFiles(path.join(env.worktree, ".ai-sessions")), [])
 
     await hooks.event(created("ses_bbb"))
-    assert.deepEqual(await sessionFiles(path.join(env.worktree, "ai-sessions")), [
+    assert.deepEqual(await sessionFiles(path.join(env.worktree, ".ai-sessions")), [
       "2026-09-16/15-08_pervaya_sessiya.json",
     ])
-    const savedA = await readJsonAbs(path.join(env.worktree, "ai-sessions", "2026-09-16", "15-08_pervaya_sessiya.json"))
+    const savedA = await readJsonAbs(path.join(env.worktree, ".ai-sessions", "2026-09-16", "15-08_pervaya_sessiya.json"))
     assert.equal(savedA.info.id, "ses_aaa")
     assert.equal(savedA.messages.length, 1)
 
     await hooks.dispose()
-    assert.deepEqual(await sessionFiles(path.join(env.worktree, "ai-sessions")), [
+    assert.deepEqual(await sessionFiles(path.join(env.worktree, ".ai-sessions")), [
       "2026-09-16/15-08_pervaya_sessiya.json",
       "2026-09-16/15-08_second.json",
     ])
-    const index = await readJsonAbs(path.join(env.worktree, "ai-sessions", ".index.json"))
+    const index = await readJsonAbs(path.join(env.worktree, ".ai-sessions", ".index.json"))
     assert.equal(index.version, 1)
     assert.equal(index.sessions.ses_aaa.path, "2026-09-16/15-08_pervaya_sessiya.json")
     assert.equal(index.sessions.ses_bbb.path, "2026-09-16/15-08_second.json")
@@ -298,7 +298,7 @@ test("dedup skips unchanged sessions; minute rollover moves path and removes old
     await hooks.event(created("ses_bbb"))
     await hooks.dispose()
 
-    const betaFile = path.join(env.worktree, "ai-sessions", "2026-09-16", "15-08_beta.json")
+    const betaFile = path.join(env.worktree, ".ai-sessions", "2026-09-16", "15-08_beta.json")
     const mtimeBefore = (await stat(betaFile)).mtimeMs
 
     await hooks.event(created("ses_ccc"))
@@ -310,12 +310,12 @@ test("dedup skips unchanged sessions; minute rollover moves path and removes old
     await hooks.event(updated("ses_bbb"))
     await hooks.dispose()
 
-    assert.deepEqual(await sessionFiles(path.join(env.worktree, "ai-sessions")), [
+    assert.deepEqual(await sessionFiles(path.join(env.worktree, ".ai-sessions")), [
       "2026-09-16/15-08_alpha.json",
       "2026-09-16/15-08_gamma.json",
       "2026-09-16/15-09_beta.json",
     ])
-    const index = await readJsonAbs(path.join(env.worktree, "ai-sessions", ".index.json"))
+    const index = await readJsonAbs(path.join(env.worktree, ".ai-sessions", ".index.json"))
     assert.equal(index.sessions.ses_bbb.path, "2026-09-16/15-09_beta.json")
   } finally {
     await cleanup(env)
@@ -336,7 +336,7 @@ test("subagent sessions are never saved and never become active", async () => {
     await hooks.event(updated("ses_sub"))
     await hooks.dispose()
 
-    assert.deepEqual(await sessionFiles(path.join(env.worktree, "ai-sessions")), [
+    assert.deepEqual(await sessionFiles(path.join(env.worktree, ".ai-sessions")), [
       "2026-09-16/15-08_top.json",
     ])
   } finally {
@@ -356,13 +356,13 @@ test("session.deleted removes file and index entry, clears active session", asyn
     await hooks.event(created("ses_aaa"))
     await hooks.event(created("ses_bbb"))
     await hooks.dispose()
-    assert.equal((await sessionFiles(path.join(env.worktree, "ai-sessions"))).length, 2)
+    assert.equal((await sessionFiles(path.join(env.worktree, ".ai-sessions"))).length, 2)
 
     await hooks.event(deleted("ses_bbb"))
-    assert.deepEqual(await sessionFiles(path.join(env.worktree, "ai-sessions")), [
+    assert.deepEqual(await sessionFiles(path.join(env.worktree, ".ai-sessions")), [
       "2026-09-16/15-08_alpha.json",
     ])
-    const index = await readJsonAbs(path.join(env.worktree, "ai-sessions", ".index.json"))
+    const index = await readJsonAbs(path.join(env.worktree, ".ai-sessions", ".index.json"))
     assert.equal(index.sessions.ses_bbb, undefined)
     assert.equal(index.sessions.ses_aaa.path, "2026-09-16/15-08_alpha.json")
   } finally {
@@ -383,7 +383,7 @@ test("project config wins: custom root and minMessages are honored", async () =>
     await hooks.event(created("ses_long"))
     await hooks.dispose()
 
-    await assert.rejects(stat(path.join(env.worktree, "ai-sessions")))
+    await assert.rejects(stat(path.join(env.worktree, ".ai-sessions")))
     assert.deepEqual(await sessionFiles(path.join(env.worktree, "custom-sessions")), [
       "2026-09-16/15-08_long_talk.json",
     ])
@@ -408,7 +408,7 @@ test("global config applies when project config is absent", async () => {
     await hooks.event(created("ses_aaa"))
     await hooks.dispose()
 
-    assert.deepEqual(await sessionFiles(path.join(env.worktree, "ai-sessions")), [
+    assert.deepEqual(await sessionFiles(path.join(env.worktree, ".ai-sessions")), [
       "2026-09-16/15-08_very_.json",
     ])
   } finally {
@@ -419,7 +419,7 @@ test("global config applies when project config is absent", async () => {
 test("warm rebuild: index derived from existing files, dedup and delete work on rebuilt entries", async () => {
   const env = await makeEnv()
   try {
-    const oldFile = path.join(env.worktree, "ai-sessions", "2026-09-16", "15-08_old.json")
+    const oldFile = path.join(env.worktree, ".ai-sessions", "2026-09-16", "15-08_old.json")
     await mkdir(path.dirname(oldFile), { recursive: true })
     const oldData = { info: { id: "ses_old", title: "Old" }, messages: [msg("m1")] }
     await writeFile(oldFile, JSON.stringify(oldData, null, 2))
@@ -431,7 +431,7 @@ test("warm rebuild: index derived from existing files, dedup and delete work on 
     const hooks = await startPlugin(env, sessions)
 
     await hooks.event(created("ses_old"))
-    const index = await readJsonAbs(path.join(env.worktree, "ai-sessions", ".index.json"))
+    const index = await readJsonAbs(path.join(env.worktree, ".ai-sessions", ".index.json"))
     assert.equal(index.sessions.ses_old.path, "2026-09-16/15-08_old.json")
 
     const mtimeBefore = (await stat(oldFile)).mtimeMs
@@ -440,7 +440,7 @@ test("warm rebuild: index derived from existing files, dedup and delete work on 
     assert.equal((await stat(oldFile)).mtimeMs, mtimeBefore)
 
     await hooks.event(deleted("ses_old"))
-    assert.deepEqual(await sessionFiles(path.join(env.worktree, "ai-sessions")), [
+    assert.deepEqual(await sessionFiles(path.join(env.worktree, ".ai-sessions")), [
       "2026-09-16/15-08_new.json",
     ])
   } finally {
